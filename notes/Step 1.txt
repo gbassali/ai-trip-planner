@@ -1,0 +1,52 @@
+I restructured the project files:
+    - Not using a generic planner.py anymore.
+    - Created a trip_planner directory --> contents of this directory are treated as their own package. Files inside are modules of the package (llm, models, etc.)
+    - Apparently this means cleaner imports.
+
+Trip planner package contents:
+    - llm.py
+
+Contains logic for connecting to & prompting the LLM.
+generate_itinerary method:
+    - Prompts the ai model for an itinerary
+    - Validates the itinerary (check it is valid json & matches the itinerary model)
+
+    - models.py
+
+Where the models are defined using Pydantic.
+Each model's field uses Field().
+This allows us to attach extra metadata to the field (or rules if we later need it - like less than, greater than, etc.)
+I'm attaching the definitions of each field, potentially to give to the ai model later.
+Models:
+- ItineraryStop: 1 activity/stop in the itinerary.
+- ItinerarySection: A section in the itinerary (morning, afternoon, evening, breakfast, lunch, dinner, etc.)
+- Itinerary: The overall itinerary.
+
+    - prompts.py
+
+The prompts we feed the ai model.
+For now, itinerary uses exactly 3 sections. This can be expanded on later.
+
+    - main.py
+
+Main function: Takes user input, builds prompt, and outputs itinerary.
+
+To run project: python -m trip_planner.main
+    - This command provides a library module for python to run instead of a specific file path.
+
+requirements.txt: Included libraries & specific versions for google-genai, pydantic, and python-dotenv.
+- Set up virtual environment for this project, so the terminal doesn't use my global python setup.
+    - To create env: python -m venv .venv
+- Python will use the packages inside .venv when running this project.
+- Activate virtual env: .venv\Scripts\Activate.ps1
+- Deactivate virtual env: deactivate
+
+Summary:
+- Gemini is now returning structured output. Before it might've returned any random output shape: Paragraph, bullet points, json, etc. 
+- Improved the itinerary prompt to ensure it returns a specific json shape, matching the fields we need.
+- Then we use Pydantic:
+    - Defined specific OOP classes like Itinerary, ItinerarySection, and ItineraryStop
+    - Used these models to ensure Gemini returns:
+        - Valid JSON 
+        - JSON fitting the specific Itinerary shape we need.
+- This is a good foundation. When the app gets more complex, it will need structured data to work with.

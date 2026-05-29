@@ -1,0 +1,43 @@
+project state as of now: basic gemini wrapper
+
+Plan:
+1. Make gemini return a structured itinerary JSON object 
+    If gemini outputs any potential output shape, that becomes harder to reuse later.
+    Use Pydantic to determine what the output shape looks like.
+    Concepts:
+        - Prompt Engineering
+        - Structured outputs
+        - JSON outputs
+        - Schema Validation
+        - Pydantic
+2. Embeddings - Rank places by how well they match the user's vibe.
+    Learn more about embeddings and how they work, take some notes.
+    Gemini has models for semantic search/similarity, classification, and clustering.
+    Also free model sentence-transformers/all-MiniLM-L6-v2
+    Concepts:
+        - What vectors are
+        - Cosine similarity? - "measure of similarity between two non-zero vectors in an inner product space, defined as the cosine of the angle between them"
+        - Semantic search
+        - Embedding models
+3. RAG - Use real data instead of relying on Gemini to come up with everything.
+    Learn more about what RAG (Retrieval Augmented Generation) is.
+    Use free, open-source map data. 
+        - OpenStreetMap through Overpass API: Overpass lets you query OpenStreetMap data for things like cafés, museums, parks, restaurants, viewpoints, and shops.
+        - Designed to query 
+    Concepts:
+        - Retrieve data.
+        - Rank data.
+        - Give data to LLM & prevent it from inventing unsupported facts.
+4. Itineraries that make sense - avoid jumping all over city.
+    In the beginning, we can just use the straight-line distance between the coordinates of places. Haversine formula
+    More advanced: Use OSRM.
+    Concepts:
+        - Latitude/longitude
+        - Distance calculation
+        - Clustering nearby places
+        - Routing/travel time
+5. Itinerary scheduling - 
+    Define time blocks & assign certain "categories" to time blocks.
+    Like morning: cafes, bakery, park. Afternoon: park, museum, market, etc.
+    Set the number of stops by energy level. ex: Low energy: 3 stops. Medium energy: 4-5 stops. High energy: 6-7 stops.
+6. Use Gemini to format final response. 
