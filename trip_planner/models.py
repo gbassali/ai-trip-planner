@@ -22,3 +22,14 @@ class Itinerary(BaseModel):
     sections: list[ItinerarySection] = Field(description="List of itinerary sections, typically Morning, Afternoon, and Evening")
     notes: list[str] = Field(default_factory=list, description="Additional notes or tips for the user, such as transportation suggestions, best times to visit certain stops, or any special considerations")
     summary: str = Field(description="A brief summary of the itinerary, highlighting the overall theme and key activities planned for the day")
+
+class Activity(BaseModel):
+    id: str = Field(description="Unique identifier for the activity")
+    name: str = Field(description="Name of the activity or place")
+    description: str = Field(description="Description of the activity or place")
+    category: str = Field(description="Category such as cafe, museum, park, or nightlife")
+    tags: list[str] = Field(default_factory=list, description="Tags describing the activity and its vibe")
+
+class RankedActivity(BaseModel):
+    activity: Activity
+    similarity_score: float = Field(description="Embedding similarity score between the activity and user preferences")
