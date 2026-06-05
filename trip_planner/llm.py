@@ -1,5 +1,4 @@
 from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
@@ -7,16 +6,16 @@ from trip_planner.models import Itinerary
 
 load_dotenv()
 
-# LLMClient is responsible for communicating with the language model to generate itineraries based on user preferences. 
-# It uses the Google Gemini API to send prompts and receive responses, which are then validated and parsed into Itinerary objects.
-class LLMClient:
-    def __init__(self, model_name: str = "gemini-3-flash-preview"):
+# This file defines a GeminiClient class that wraps the GenAI client and provides methods for generating itineraries and getting embeddings.
+class GeminiClient:
+    def __init__(self, generation_model: str = "gemini-3-flash-preview", embedding_model: str = "gemini-embedding-2"):
         self.client = genai.Client() # The client gets the API key from the environment variable `GEMINI_API_KEY`.
-        self.model_name = model_name
+        self.generation_model = generation_model
+        self.embedding_model = embedding_model
 
     def generate_itinerary(self, prompt: str) -> Itinerary:
         response = self.client.models.generate_content(
-            model="gemini-3-flash-preview", contents=prompt
+            model=self.generation_model, contents=prompt
         )
         raw_text = response.text
 
@@ -25,3 +24,11 @@ class LLMClient:
              return itinerary
         except ValidationError as e:
              raise ValueError(f"Failed to parse itinerary from LLM response. Error: {e}\nRaw response: {raw_text}")
+        
+    def get_embedding(self, text: str) -> list[float]:
+        response = self.client.models.embed_content(
+            model=self.embedding_model,
+            contents=text,
+        )
+        # This is a list of embedding objects. We only sent one text, so we take the first embedding.
+        return response.embeddings[0].values  
