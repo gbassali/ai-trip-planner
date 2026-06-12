@@ -29,6 +29,8 @@ class Activity(BaseModel):
     description: str = Field(description="Description of the activity or place")
     category: str = Field(description="Category such as cafe, museum, park, or nightlife")
     tags: list[str] = Field(default_factory=list, description="Tags describing the activity and its vibe")
+    latitude: float = Field(description="Latitude of the activity")
+    longitude: float = Field(description="Longitude of the activity")
 
 class RankedActivity(BaseModel):
     activity: Activity
