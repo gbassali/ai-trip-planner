@@ -17,7 +17,13 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot_product / (magnitude_a * magnitude_b)
 
 def build_user_query(vibe: str, energy_level: str) -> str:
-    return f"The traveler wants a {vibe} experience. Their energy level is {energy_level}. Recommend activities that match their preferences."
+    return (
+        f"The traveler wants a {vibe} experience. "
+        f"Their energy level is {energy_level}. " 
+        f"Recommend relevant trip activities, attractions, food, nightlife, "
+        f"entertainment, parks, museums, bars, cafes, restaurants, and local experiences "
+        f"that match the user's preferences."
+    )
 
 # Get embedding for a user query
 def embed_user_query(client: GeminiClient, query: str) -> list[float]:

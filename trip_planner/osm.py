@@ -1,3 +1,4 @@
+from collections import defaultdict
 import requests
 from trip_planner.models import Activity
 
@@ -8,8 +9,9 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 OTTAWA_BOUNDING_BOX = "45.395,-75.730,45.445,-75.660"
 
 # Useful OpenStreetMap tags --> expand on this
+# This info is saved after a place is fetched to form a Activity object.
 # Tag Finder: https://tagfinder.osm.ch/search?query=takeaway&lang=en
-USEFUL_TAG_KEYS = [
+OSM_DETAIL_TAG_KEYS = [
     "cuisine",
     "outdoor_seating",
     "wheelchair",
@@ -19,28 +21,55 @@ USEFUL_TAG_KEYS = [
     "diet:vegan",
 ]
 
-def fetch_raw_places() -> list[dict]:
-    """
-    Retrieve a small set of real places from OpenStreetMap --> intentionally limited to central Ottawa. 
-    We will make the location dynamic.
-    """
+# Used to build Overpass query. We only retrieve places matching one of the tags. 
+OSM_CATEGORY_FILTERS = [
+    ("amenity", "cafe"),
+    ("amenity", "restaurant"),
+    ("amenity", "bar"),
+    ("amenity", "pub"),
+    ("amenity", "nightclub"),
+    ("amenity", "music_venue"),
+    ("amenity", "theatre"),
+    ("amenity", "cinema"),
+    ("tourism", "museum"),
+    ("tourism", "gallery"),
+    ("tourism", "attraction"),
+    ("leisure", "park"),
+    ("leisure", "garden"),
+    ("leisure", "bowling_alley"),
+    ("leisure", "escape_game"),
+    ("shop", "books"),
+]
 
-    query = f"""
-    [out:json]
-    [timeout:25];
+PRIMARY_CATEGORY_KEYS = ["amenity", "tourism", "leisure", "shop"]
+
+def build_overpass_query(bounding_box: str) -> str:
+    """
+    Returns an Overpass query to fetch places from OpenStreetMap in a bounding box
+    Query gets all nodes, ways, and relations that match the tag filters in OSM_CATEGORY_FILTERS
+    """
+    query_parts = []
+
+    for key, value in OSM_CATEGORY_FILTERS:
+        query_parts.append(f'nwr["{key}"="{value}"]({bounding_box});') # nwr = node, way, relation
+
+    joined_query_parts = "\n      ".join(query_parts)
+
+    return f"""
+    [out:json][timeout:25];
 
     (
-      node["amenity"="cafe"]({OTTAWA_BOUNDING_BOX});
-      node["amenity"="restaurant"]({OTTAWA_BOUNDING_BOX});
-      node["tourism"="museum"]({OTTAWA_BOUNDING_BOX});
-      node["leisure"="park"]({OTTAWA_BOUNDING_BOX});
-      node["shop"="books"]({OTTAWA_BOUNDING_BOX});
+      {joined_query_parts}
     );
 
     out center;
     """
-    # gets the center point of each node
 
+def fetch_raw_places(bounding_box: str) -> list[dict]:
+    """
+    Fetch raw OpenStreetMap records from the Overpass API for a given bounding box.
+    """
+    query = build_overpass_query(bounding_box)
     response = requests.post(
         OVERPASS_URL,
         data={"data": query},
@@ -104,12 +133,13 @@ def normalize_places(raw_places: list[dict]) -> list[Activity]:
 
     return activities
 
-def fetch_activities() -> list[Activity]:
+def fetch_activities(bounding_box: str = OTTAWA_BOUNDING_BOX) -> list[Activity]:
     """
     Retrieve places from OpenStreetMap and return normalized activities.
     """
-    raw_places = fetch_raw_places()
+    raw_places = fetch_raw_places(bounding_box)
     return normalize_places(raw_places)
+
 
 # NORMALIZATION HELPERS
 def get_coordinates(place: dict) -> tuple[float | None, float | None]:
@@ -123,6 +153,8 @@ def get_coordinates(place: dict) -> tuple[float | None, float | None]:
         return place["lat"], place["lon"]
 
     center = place.get("center")
+    if not center:
+        return None, None
     return center.get("lat"), center.get("lon")
 
 def get_category(tags: dict) -> str | None:
@@ -138,9 +170,18 @@ def get_category(tags: dict) -> str | None:
     )
 
 def build_activity_tags(osm_tags: dict, category: str) -> list[str]:
+    """
+    Build a list of tags for an Activity object based on OpenStreetMap tags.
+    """
     activity_tags = [category.replace("_", " ")]
 
-    for key in USEFUL_TAG_KEYS:
+    # Adds all matching category tags to Activity tags list
+    # for key in ["amenity", "tourism", "leisure", "shop"]:
+    #     value = osm_tags.get(key)
+    #     if value:
+    #         activity_tags.append(f"{key}: {value.replace('_', ' ')}")
+
+    for key in OSM_DETAIL_TAG_KEYS:
         value = osm_tags.get(key)
 
         if value:
@@ -148,3 +189,21 @@ def build_activity_tags(osm_tags: dict, category: str) -> list[str]:
             activity_tags.append(f"{readable_key}: {value}")
 
     return activity_tags
+
+# To deal with model limitations
+def limit_activities_per_category(activities: list[Activity], max_per_category: int = 15,) -> list[Activity]:
+    """
+    Limit the number of activities per category due to model limitations.
+    Groups activities by category & returns a balanced list of activities with a maximum of `max_per_category` activities per category.
+    """
+    grouped = defaultdict(list)
+
+    for activity in activities:
+        grouped[activity.category].append(activity)
+
+    balanced_activities = []
+
+    for category, category_activities in grouped.items():
+        balanced_activities.extend(category_activities[:max_per_category])
+
+    return balanced_activities
