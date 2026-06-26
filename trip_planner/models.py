@@ -17,6 +17,7 @@ class ItinerarySection(BaseModel):
 
 class Itinerary(BaseModel):
     city: str = Field(description="The city for which the itinerary is planned")
+    country: str = Field(description="The country for which the itinerary is planned")
     vibe: str = Field(description="The vibe or atmosphere the user is looking for, such as 'romantic', 'adventurous', 'family-friendly'")
     energy_level: Literal['low', 'medium', 'high'] = Field(description="The user's energy level, which can be 'low', 'medium', or 'high'")
     sections: list[ItinerarySection] = Field(description="List of itinerary sections, typically Morning, Afternoon, and Evening")

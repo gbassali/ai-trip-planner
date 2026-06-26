@@ -1,4 +1,32 @@
-def build_itinerary_prompt(city: str, vibe: str, energy_level: str) -> str:
+import json
+from trip_planner.models import RankedActivity
+
+def format_ranked_activities_for_prompt(ranked_activities: list[RankedActivity], limit) -> str:
+    """
+    Convert ranked activities (list of python objects) into JSON format for the LLM prompt
+    """
+    activities_for_prompt = []
+
+    for ranked_activity in ranked_activities[:limit]:
+        activity = ranked_activity.activity
+
+        activities_for_prompt.append(
+            {
+                "name": activity.name,
+                "category": activity.category,
+                "tags": activity.tags,
+                "latitude": activity.latitude,
+                "longitude": activity.longitude,
+                "similarity_score": round(ranked_activity.similarity_score, 3),
+            }
+        )
+
+    # Serialize list of activities to json strin
+    return json.dumps(activities_for_prompt, indent=2)
+
+def build_itinerary_prompt(city: str, country: str, vibe: str, energy_level: str, ranked_activities: list[RankedActivity]) -> str:
+    activity_options = format_ranked_activities_for_prompt(ranked_activities, limit=20)
+    
     return f"""
 You are a helpful AI trip planner.
 
@@ -6,8 +34,14 @@ Create a realistic 1-day itinerary for the user.
 
 User preferences:
 - City: {city}
+- Country: {country}
 - Vibe: {vibe}
 - Energy level: {energy_level}
+
+You must build the itinerary using ONLY the provided OpenStreetMap activity options below.
+
+OpenStreetMap activity options:
+{activity_options}
 
 Return ONLY valid JSON.
 Do not include markdown.
@@ -18,6 +52,7 @@ The JSON must match this exact structure:
 
 {{
   "city": "{city}",
+  "country": "{country}",
   "vibe": "{vibe}",
   "energy_level": "{energy_level}",
   "summary": "A short overview of the itinerary.",
@@ -27,13 +62,13 @@ The JSON must match this exact structure:
       "stops": [
         {{
           "time": "9:00 AM",
-          "name": "Name of the stop",
-          "description": "Short description of what the user will do.",
+          "name": "Exact name of one provided OpenStreetMap activity option",
+          "description": "Short description based only on the provided category and tags.",
           "why_it_fits": "Why this stop fits the user's vibe and energy level.",
           "estimated_duration_minutes": 60,
           "estimated_cost": "Free",
           "category": "Activity",
-          "tags": ["low-energy", "relaxed"]
+          "tags": ["tag from provided activity"]
         }}
       ]
     }},
@@ -55,8 +90,10 @@ Rules:
 - Do not overpack the day.
 - Use the exact energy_level value "{energy_level}" in lowercase.
 - Do not use "Low", "Medium", or "High". Use "low", "medium", or "high".
-- Do not create keys named "morning", "afternoon", "evening", "activities", or "food".
+- Every stop name must exactly match one of the provided OpenStreetMap activity option names.
+- Do not invent places that are not in the provided OpenStreetMap activity options.
+- Do not invent exact opening hours, exact prices, menus, events, or reservation availability.
+- Do not invent exact prices. If cost is unknown, use "Varies" or "Check official website".
+- Include food stops as normal stops with category "Food" only if the selected OSM place is a cafe, restaurant, bar, pub, or similar food/drink place.
 - Put all activities and food options inside the "sections" list as stops.
-- Include food stops as normal stops with category "Food".
-- Do not invent exact prices. Use values like "Free", "Varies", "$10-20 per person", or "Reservation recommended".
 """
