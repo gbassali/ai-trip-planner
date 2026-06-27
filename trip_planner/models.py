@@ -36,3 +36,9 @@ class Activity(BaseModel):
 class RankedActivity(BaseModel):
     activity: Activity
     similarity_score: float = Field(description="Embedding similarity score between the activity and user preferences")
+
+class GeocodedLocation(BaseModel):
+    display_name: str
+    latitude: float
+    longitude: float
+    bounding_box: str

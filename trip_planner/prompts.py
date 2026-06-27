@@ -21,7 +21,7 @@ def format_ranked_activities_for_prompt(ranked_activities: list[RankedActivity],
             }
         )
 
-    # Serialize list of activities to json strin
+    # Serialize list of activities to json string
     return json.dumps(activities_for_prompt, indent=2)
 
 def build_itinerary_prompt(city: str, country: str, vibe: str, energy_level: str, ranked_activities: list[RankedActivity]) -> str:
@@ -67,8 +67,8 @@ The JSON must match this exact structure:
           "why_it_fits": "Why this stop fits the user's vibe and energy level.",
           "estimated_duration_minutes": 60,
           "estimated_cost": "Free",
-          "category": "Activity",
-          "tags": ["tag from provided activity"]
+          "category": "Exact category from the selected OpenStreetMap activity option",
+          "tags": ["Exact tags from the selected OpenStreetMap activity option"]
         }}
       ]
     }},
@@ -90,10 +90,12 @@ Rules:
 - Do not overpack the day.
 - Use the exact energy_level value "{energy_level}" in lowercase.
 - Do not use "Low", "Medium", or "High". Use "low", "medium", or "high".
+- Every stop must use the exact name, category, and tags from one selected OpenStreetMap activity option.
 - Every stop name must exactly match one of the provided OpenStreetMap activity option names.
 - Do not invent places that are not in the provided OpenStreetMap activity options.
+- Do not invent, rename, simplify, or reinterpret categories.
+- Do not convert categories into broad labels like "Food", "Nightlife", or "Activity".
 - Do not invent exact opening hours, exact prices, menus, events, or reservation availability.
 - Do not invent exact prices. If cost is unknown, use "Varies" or "Check official website".
-- Include food stops as normal stops with category "Food" only if the selected OSM place is a cafe, restaurant, bar, pub, or similar food/drink place.
-- Put all activities and food options inside the "sections" list as stops.
+- Put all selected OpenStreetMap activity options inside the "sections" list as stops.
 """

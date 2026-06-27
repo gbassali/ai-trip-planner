@@ -18,17 +18,18 @@ def main():
     llm_client = GeminiClient()
     
     try:
-        bounding_box = geocode_city_to_bounding_box(city, country)
+        location = geocode_city_to_bounding_box(city, country)
     except ValueError as e:
         print(e)
         return
     
-    print(f"\nFound bounding box for {city}, {country}: {bounding_box}")
+    print(f"\nFound location: {location.display_name}")
+    print(f"Search bounding box: {location.bounding_box}")
     
-    activities = fetch_activities(bounding_box)
+    activities = fetch_activities(location.bounding_box)
     print(f"\nRetrieved {len(activities)} usable activities from OpenStreetMap.")
 
-    activities = limit_activities_per_category(activities, max_per_category=15)
+    activities = limit_activities_per_category(activities, 5)
 
     print(f"Embedding {len(activities)} balanced activities.")
 
@@ -37,7 +38,7 @@ def main():
 
     print("\n--- Activity Rankings ---\n")
 
-    for ranked_activity in ranked_activities[:10]:
+    for ranked_activity in ranked_activities[:20]:
         print(
             f"{ranked_activity.similarity_score:.3f} - "
             f"{ranked_activity.activity.name}"
