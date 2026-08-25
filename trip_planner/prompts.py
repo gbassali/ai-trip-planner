@@ -97,5 +97,7 @@ Rules:
 - Do not convert categories into broad labels like "Food", "Nightlife", or "Activity".
 - Do not invent exact opening hours, exact prices, menus, events, or reservation availability.
 - Do not invent exact prices. If cost is unknown, use "Varies" or "Check official website".
-- Put all selected OpenStreetMap activity options inside the "sections" list as stops.
+- Every itinerary stop must come from the provided OpenStreetMap activity options.
+- You may give general planning reminders, such as checking opening hours, booking requirements, entry policies, or official websites.
+- Do not claim that a specific place requires reservations, has cover charges, age restrictions, or special policies unless that information appears in the provided activity data.
 """

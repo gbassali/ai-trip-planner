@@ -5,9 +5,12 @@ from trip_planner.models import GeocodedLocation
 # We use the geocoder Nominatim API to get bounding box coordinates for a city
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
-def geocode_city_to_bounding_box(city: str, country: str) -> str:
+def geocode_city_to_location(city: str, country: str) -> GeocodedLocation:
     """
-    Convert a city name into an Overpass compatible bounding box
+    Convert a city & country into a geocoded location with a:
+        - Display name
+        - City center latitude and longitude
+        - Overpass compatible bounding box
 
     Nominatim returns boundingbox as: [south, north, west, east]
     Overpass expects bounding boxes as: south, west, north, east

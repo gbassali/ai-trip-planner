@@ -1,0 +1,52 @@
+Embedding (general):
+A model cannot understand text input. It needs numerical data.
+With embedding, text is represented as vectors of real numbers. 
+For example, an embedding model could map: "quiet bookstore" = [0.12, -0.55, 0.94, ...]
+Texts with similar meanings should have vectors that are closer to each other.
+
+ML Heavy Explanation: https://aws.amazon.com/what-is/embeddings-in-machine-learning/
+https://www.ibm.com/think/topics/embedding
+
+
+Cosine Similarity:
+- Measures the cosine of the angle between 2 nonzero vectors.
+- A cosine similarity score of:
+    - 1: Vectors are pointing in the same direction.
+    - 0: Vectors are orthogonal.
+    - -1: Vectors point in the opposite direction.
+    - So when vector embeddings are generated, we can use cosine similarity for example to see how similar they are.
+
+Semantic Search: Searching by meaning, not definitions. Considers synonyms, abbreviations, and misspellings. 
+
+
+Restructured LLM Client into Gemini Client:
+- I wanted to use a Gemini embedding model. 
+- LLMs and embedding models serve different purposes:
+    - LLM: Generates text.
+    - Embedding: Converts text into numerical vectors. 
+- I could've created a separate Embedding Client class, but for now I'll have a generic Gemini Client class.
+- So you can pass in an embedding model & text generation model to use. 
+
+Created ranking.py file
+- cosine_similarity(a, b): Gets the cosine similarity between 2 vectors. Used to determine how similar an activity is to the user's preferences.
+- embed_user_query & embed_activity: 
+    - Format content & get embedding.
+    - The user's preferences are formatted as a search query (task: search result | query: ...)
+    - An activity is formatted as a candidate document (title: ... | text: ...). It's a possible answer/result.
+    - Asymmetric retrieval task: 2 inputs with different purposes. One input is a search query, the other is a search result.
+        - So we use different prefix's for the inputs.
+        - Symmetric tasks: 
+            - Both inputs have the same role --> same prefix is used. 
+            - ex: Checking if two sentences mean the same thing. 
+            - task: sentence similarity | query: quiet coffee shop. task: sentence similarity | query: peaceful cafe
+    - This tells the model that the first text is a request and the second text is a possible recommendation.
+    - More useful results, instead of only checking whether the two pieces of text are phrased similarly.
+- rank_activities:
+    - Embeds user preferences & activities. 
+    - Stores all activities with their cosine similarity to the user's preferences.
+    - Returns a ranked list of activities.
+
+models.py
+- Added Activity & RankedActivity models to store activities & rank them. 
+
+Hardcoded activities in sample_activities.py for now

@@ -3,7 +3,7 @@ from trip_planner.llm import GeminiClient
 from trip_planner.prompts import build_itinerary_prompt
 from trip_planner.ranking import build_user_query, rank_activities
 from trip_planner.osm import fetch_activities, limit_activities_per_category
-from trip_planner.geocoding import geocode_city_to_bounding_box
+from trip_planner.geocoding import geocode_city_to_location
 
 def main():
     city = input("Enter the city you're visiting: ")
@@ -18,12 +18,12 @@ def main():
     llm_client = GeminiClient()
     
     try:
-        location = geocode_city_to_bounding_box(city, country)
+        location = geocode_city_to_location(city, country)
     except ValueError as e:
         print(e)
         return
     
-    print(f"\nFound location: {location.display_name}")
+    print(f"\nFound city center location: {location.display_name}. Coordinates: ({location.latitude}, {location.longitude})")
     print(f"Search bounding box: {location.bounding_box}")
     
     activities = fetch_activities(location.bounding_box)
@@ -34,7 +34,7 @@ def main():
     print(f"Embedding {len(activities)} balanced activities.")
 
     user_query = build_user_query(vibe, energy_level)
-    ranked_activities = rank_activities(llm_client, user_query, activities)
+    ranked_activities = rank_activities(llm_client, user_query, activities) # TODO: batch embeddings to reduce resource errors
 
     print("\n--- Activity Rankings ---\n")
 
